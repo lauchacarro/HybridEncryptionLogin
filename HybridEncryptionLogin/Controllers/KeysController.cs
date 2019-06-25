@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using HybridEncryptionLogin.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -21,22 +23,18 @@ namespace HybridEncryptionLogin.Controllers
         }
 
         [HttpGet("[action]")]
-        public async Task<IActionResult> GetPublicKey()
+        public async Task<IActionResult> GetPublicKey(string email)
         {
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-            _cache.Set(rsa.ExportCspBlob(false), rsa.ExportCspBlob(true));
-            return Ok(rsa.ExportCspBlob(false));
-        }
-        [HttpGet("[action]")]
-        public async Task<IActionResult> GetPrivateKey(string publickey)
-        {
-
-            byte[] privateKey = _cache.Get<byte[]>(Convert.FromBase64String(publickey));
-            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
-            rsa.ImportCspBlob(privateKey);
-
-           
-            return Ok(rsa.ExportCspBlob(true));
+            if (_cache.TryGetValue(email, out string pem))
+            {
+                _cache.Remove(email);
+            }
+            string publickey = PemKeyUtils.GetPublicPEM(rsa);
+            string privatekey = PemKeyUtils.GetPrivatePEM(rsa);
+            _cache.Set(email, privatekey, new TimeSpan(1,0,0));
+            
+            return Ok( new { Key = publickey });
         }
     }
 }

@@ -1,35 +1,24 @@
 import React, { Component } from 'react';
 
 import Form from 'react-bootstrap/Form'
-    import Button from 'react-bootstrap/Button'
+import Button from 'react-bootstrap/Button'
+import EncryptHelper from './EncryptHelper'
 
 
 export class Login extends Component {
 
-
-
-
-    // fetch('api/SampleData/WeatherForecasts')
-    //   .then(response => response.json())
-    //   .then(data => {
-    //     this.setState({ forecasts: data, loading: false });
-    //   });
-  
-
-
-
-
-
-
   constructor(props) {
     super(props);
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
 
-    
   }
+
   state = {
     email: "",
     password: ""
   };
+
   validateForm() {
     return this.state.email.length > 0 && this.state.password.length > 0;
   }
@@ -42,32 +31,49 @@ export class Login extends Component {
 
   handleSubmit = event => {
     event.preventDefault();
-    fetch('/api/account/login', {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            email: this.state.email,
-            password: this.state.password,
+    fetch('/api/keys/GetPublicKey?email=' + this.state.email, {
+      method: 'GET'
+      })
+      .then(response => {
+          if (response.ok) {
+            
+            response.json().then(json => {
+
+              EncryptHelper.setPublicKey(json["key"])
+
+              fetch('/api/account/login', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: this.state.email,
+                    password: EncryptHelper.encryptInput(this.state.password),
+                })
+                
+                })
+                .then(response => {
+                    if (response.ok) {
+                      alert("Inicio Sesión Correctamente")
+                    } else if (response.status == 400) {
+                        alert("Email y/o Contraseña Incorrectos")
+                    } else {
+                      alert("Hubo Un Error En El Servidor")
+                    }
+                  })
+
+              });
+
+
+          } else {
+              alert("Hubo Un Error En El Servidor")
+          }
         })
-        
-        })
-        .then(response => {
-            if (response.ok) {
-              alert("Inicio Sesión Correctamente")
-            } else {
-                alert("Email y/o Contraseña Incorrectos")
-            }
-          })
-     
   }
 
- 
 
   render () {
-
 
     return (
         
@@ -77,7 +83,7 @@ export class Login extends Component {
                     Password: test
                 </div>
         <Form onSubmit={this.handleSubmit}>
-          <Form.Group controlId="email" bsSize="large">
+          <Form.Group controlId="email" >
             <Form.Label >Email</Form.Label >
             <Form.Control
               autoFocus
@@ -86,7 +92,7 @@ export class Login extends Component {
               onChange={this.handleChange}
             />
           </Form.Group>
-          <Form.Group controlId="password" bsSize="large">
+          <Form.Group controlId="password" >
             <Form.Label >Password</Form.Label >
             <Form.Control
               value={this.state.password}
@@ -96,7 +102,6 @@ export class Login extends Component {
           </Form.Group>
           <Button
             block
-            bsSize="large"
             disabled={!this.validateForm()}
             type="submit"
           >
