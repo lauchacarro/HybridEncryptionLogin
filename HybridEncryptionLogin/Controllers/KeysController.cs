@@ -30,8 +30,11 @@ namespace HybridEncryptionLogin.Controllers
             {
                 _cache.Remove(email);
             }
+
             string publickey = PemKeyUtils.GetPublicPEM(rsa);
+
             string privatekey = PemKeyUtils.GetPrivatePEM(rsa);
+
             _cache.Set(email, privatekey, new TimeSpan(1,0,0));
             
             return Ok( new { Key = publickey });

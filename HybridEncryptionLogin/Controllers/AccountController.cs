@@ -28,26 +28,29 @@ namespace HybridEncryptionLogin.Controllers
         [HttpPost("[action]")]
         public async Task<IActionResult> Login(UserLogin userLogin)
         {
-            string password = string.Empty;
             if (_cache.TryGetValue(userLogin.Email, out string privateKey))
             {
                 _cache.Remove(userLogin.Email);
 
-                RSACryptoServiceProvider provider =  PemKeyUtils.GetRSAProviderFromPEM(privateKey);
+                byte[] symmetricKey = RSAUtils.DecryptStringRSA(HttpContext.Request.Headers["symmetric-key-encrypted"], privateKey);
 
-                byte[] CiphertextData = Convert.FromBase64String(userLogin.Password);
+                string password = AESUtils.DecryptStringAES(userLogin.Password, symmetricKey);
 
-                password = Encoding.UTF8.GetString(provider.Decrypt(CiphertextData, false));
-
-            }
-            if (userLogin.Email == "example@test.com" && password == "test")
-            {
-                return Ok();
+                if (userLogin.Email == "example@test.com" && password == "test")
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return BadRequest();
+                }
             }
             else
             {
-                return BadRequest();
+                return Forbid();
             }
+
+            
         }
     }
 }

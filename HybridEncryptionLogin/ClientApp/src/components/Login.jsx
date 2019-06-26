@@ -1,9 +1,7 @@
 import React, { Component } from 'react';
-
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
-import EncryptHelper from './EncryptHelper'
-
+import HybridEncrypter from './encrypters/HybridEncrypter'
 
 export class Login extends Component {
 
@@ -30,46 +28,45 @@ export class Login extends Component {
   }
 
   handleSubmit = event => {
+
     event.preventDefault();
-    fetch('/api/keys/GetPublicKey?email=' + this.state.email, {
-      method: 'GET'
-      })
-      .then(response => {
-          if (response.ok) {
-            
-            response.json().then(json => {
 
-              EncryptHelper.setPublicKey(json["key"])
+    HybridEncrypter.encryptInput(this.state.password, this.state.email)
 
-              fetch('/api/account/login', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: this.state.email,
-                    password: EncryptHelper.encryptInput(this.state.password),
-                })
-                
-                })
-                .then(response => {
-                    if (response.ok) {
-                      alert("Inicio Sesión Correctamente")
-                    } else if (response.status == 400) {
-                        alert("Email y/o Contraseña Incorrectos")
-                    } else {
-                      alert("Hubo Un Error En El Servidor")
-                    }
-                  })
+    .then(response => {
 
-              });
+      fetch('/api/account/login', {
 
+        method: 'POST',
 
-          } else {
-              alert("Hubo Un Error En El Servidor")
-          }
+        headers: {
+            'Accept': 'application/json',
+
+            'Content-Type': 'application/json',
+
+            'Symmetric-Key-Encrypted': response.cipherSymmetricKey
+        },
+        body: JSON.stringify({
+
+            email: this.state.email,
+
+            password: response.cipherText,
         })
+        
+        })
+        .then(response => {
+            if (response.ok) {
+
+              alert("Inició Sesión Correctamente")
+            } else if (response.status == 400) {
+
+                alert("Email y/o Contraseña Incorrectos")
+            } else {
+
+              alert("Hubó Un Error En El Servidor")
+            }
+          })
+    })
   }
 
 
