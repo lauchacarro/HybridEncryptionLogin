@@ -1,4 +1,4 @@
-
+import Config from '../Config'
 const SymmetricEncrypter = {
 
    encryptInput: function(input, secretkey) {
@@ -6,7 +6,7 @@ const SymmetricEncrypter = {
 
          var key              = CryptoJS.enc.Utf8.parse(secretkey);
 
-         var iv               = CryptoJS.enc.Utf8.parse("7061737323313233");
+         var iv               = CryptoJS.enc.Utf8.parse(Config.iv);
 
          var encrypted        = CryptoJS.AES.encrypt(CryptoJS.enc.Utf8.parse(input), key,
             {
