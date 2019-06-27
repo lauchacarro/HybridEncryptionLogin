@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using HybridEncryptionLogin.Models;
+using HybridEncryptionLogin.Services.Abstracts;
 using HybridEncryptionLogin.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,9 +20,13 @@ namespace HybridEncryptionLogin.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IMemoryCache _cache;
+        private readonly IAESService _aesService;
+        private readonly IRSAService _rsaService;
 
-        public AccountController(IMemoryCache cache)
+        public AccountController(IMemoryCache cache, IAESService aesService, IRSAService rsaService)
         {
+            _aesService = aesService;
+            _rsaService = rsaService;
             _cache = cache;
         }
 
@@ -32,9 +37,9 @@ namespace HybridEncryptionLogin.Controllers
             {
                 _cache.Remove(userLogin.Email);
 
-                byte[] symmetricKey = RSAUtils.DecryptStringRSA(HttpContext.Request.Headers["symmetric-key-encrypted"], privateKey);
+                byte[] symmetricKey = _rsaService.DecryptString(HttpContext.Request.Headers["symmetric-key-encrypted"], privateKey);
 
-                string password = AESUtils.DecryptStringAES(userLogin.Password, symmetricKey);
+                string password = _aesService.DecryptString(userLogin.Password, symmetricKey);
 
                 if (userLogin.Email == "example@test.com" && password == "test")
                 {

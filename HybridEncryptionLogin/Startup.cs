@@ -1,3 +1,5 @@
+using HybridEncryptionLogin.Services.Abstracts;
+using HybridEncryptionLogin.Services.Concretes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -21,6 +23,8 @@ namespace HybridEncryptionLogin
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMemoryCache();
+            services.AddTransient<IAESService, AESService>();
+            services.AddTransient<IRSAService, RSAService>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             // In production, the React files will be served from this directory
