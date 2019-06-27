@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-using System.Text;
 using HybridEncryptionLogin.Services.Abstracts;
 
 namespace HybridEncryptionLogin.Services.Concretes
@@ -29,7 +27,7 @@ namespace HybridEncryptionLogin.Services.Concretes
                 return null;
 
             pemstr = pemstr.Replace(PEMPRIVATEHEADER, string.Empty).Replace(PEMPRIVATEFOOTER, string.Empty);
-             RSAParameters rsaParameters =  GetRSAProviderFromPEM(pemstr);
+            RSAParameters rsaParameters = GetRSAProviderFromPEM(pemstr);
             RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
             RSA.ImportParameters(rsaParameters);
             return RSA;
@@ -323,6 +321,6 @@ namespace HybridEncryptionLogin.Services.Concretes
             }
         }
 
-        
+
     }
 }

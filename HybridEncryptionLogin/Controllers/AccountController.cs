@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using HybridEncryptionLogin.Models;
 using HybridEncryptionLogin.Services.Abstracts;
 using Microsoft.AspNetCore.Http;
@@ -54,7 +47,7 @@ namespace HybridEncryptionLogin.Controllers
                 return Forbid();
             }
 
-            
+
         }
     }
 }
