@@ -5,7 +5,6 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using HybridEncryptionLogin.Services.Abstracts;
-using HybridEncryptionLogin.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
