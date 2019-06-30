@@ -1,9 +1,9 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim AS base
+FROM mocoding/dotnet-node:2.2-10.x AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
-
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
+     
+FROM mocoding/dotnet-node:2.2-10.x AS build
 WORKDIR /src
 COPY ["HybridEncryptionLogin/HybridEncryptionLogin.csproj", "HybridEncryptionLogin/"]
 COPY ["HybridEncryptionLogin.Services/HybridEncryptionLogin.Services.csproj", "HybridEncryptionLogin.Services/"]
