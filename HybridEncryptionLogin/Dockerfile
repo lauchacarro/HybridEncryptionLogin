@@ -1,9 +1,13 @@
-FROM mocoding/dotnet-node:2.2-10.x AS base
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2-stretch-slim AS base
+RUN apt-get update -yq && apt-get upgrade -yq && apt-get install -yq curl git nano
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get install -yq nodejs build-essential
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
-     
-FROM mocoding/dotnet-node:2.2-10.x AS build
+
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
+RUN apt-get update -yq && apt-get upgrade -yq && apt-get install -yq curl git nano
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && apt-get install -yq nodejs build-essential
 WORKDIR /src
 COPY ["HybridEncryptionLogin/HybridEncryptionLogin.csproj", "HybridEncryptionLogin/"]
 COPY ["HybridEncryptionLogin.Services/HybridEncryptionLogin.Services.csproj", "HybridEncryptionLogin.Services/"]

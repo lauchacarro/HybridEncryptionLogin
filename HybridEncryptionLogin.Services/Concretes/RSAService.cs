@@ -16,13 +16,13 @@ namespace HybridEncryptionLogin.Services.Concretes
         {
             byte[] cipherTextData = Convert.FromBase64String(cipherText);
 
-            using (RSACryptoServiceProvider provider = GetRSAProviderFromPEMPrivate(pemPrivateKey))
+            using (RSA rsa = GetRSAProviderFromPEMPrivate(pemPrivateKey))
             {
-                return provider.Decrypt(cipherTextData, false);
-            }  
+                return rsa.Decrypt(cipherTextData, RSAEncryptionPadding.Pkcs1);
+            }
         }
 
-        public RSACryptoServiceProvider GetRSAProviderFromPEMPrivate(string pem)
+        public RSA GetRSAProviderFromPEMPrivate(string pem)
         {
             string pemstr = pem.Trim();
             if (!pemstr.StartsWith(PEMPRIVATEHEADER) || !pemstr.EndsWith(PEMPRIVATEFOOTER))
@@ -30,18 +30,16 @@ namespace HybridEncryptionLogin.Services.Concretes
 
             pemstr = pemstr.Replace(PEMPRIVATEHEADER, string.Empty).Replace(PEMPRIVATEFOOTER, string.Empty);
             RSAParameters rsaParameters = GetRSAProviderFromPEM(pemstr);
-            using (RSACryptoServiceProvider RSA = new RSACryptoServiceProvider())
-            {
-                RSA.ImportParameters(rsaParameters);
-                return RSA;
-            }
+            RSA rsa = RSA.Create();
+
+            rsa.ImportParameters(rsaParameters);
+            return rsa;
+
         }
 
-        public string GetPrivatePEM(RSACryptoServiceProvider csp)
+        public string GetPrivatePEM(RSA csp)
         {
             TextWriter outputStream = new StringWriter();
-
-            if (csp.PublicOnly) throw new ArgumentException("CSP does not contain a private key", "csp");
             var parameters = csp.ExportParameters(true);
             using (var stream = new MemoryStream())
             {
@@ -77,7 +75,7 @@ namespace HybridEncryptionLogin.Services.Concretes
             return outputStream.ToString();
         }
 
-        public string GetPublicPEM(RSACryptoServiceProvider csp)
+        public string GetPublicPEM(RSA csp)
         {
             TextWriter outputStream = new StringWriter();
 
@@ -115,7 +113,7 @@ namespace HybridEncryptionLogin.Services.Concretes
             }
         }
 
-        public RSACryptoServiceProvider GetRSAProviderFromPEMPublic(string pemstr)
+        public RSA GetRSAProviderFromPEMPublic(string pemstr)
         {
             pemstr = pemstr.Trim();
             if (!pemstr.StartsWith(PEMPUBLICHEADER) || !pemstr.EndsWith(PEMPUBLICFOOTER))
@@ -125,13 +123,14 @@ namespace HybridEncryptionLogin.Services.Concretes
 
 
             RSAParameters rsaParameters = GetRSAProviderFromPEM(pemstr);
-            RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
-            RSA.ImportParameters(new RSAParameters()
+            RSA rsa = RSA.Create();
+
+            rsa.ImportParameters(new RSAParameters()
             {
                 Modulus = rsaParameters.Modulus,
                 Exponent = rsaParameters.Exponent
             });
-            return RSA;
+            return rsa;
         }
 
         RSAParameters GetRSAProviderFromPEM(string pemstr)
@@ -197,15 +196,17 @@ namespace HybridEncryptionLogin.Services.Concretes
                             IQ = binr.ReadBytes(elems);
 
 
-                            RSAParameters RSAparams = new RSAParameters();
-                            RSAparams.Modulus = MODULUS;
-                            RSAparams.Exponent = E;
-                            RSAparams.D = D;
-                            RSAparams.P = P;
-                            RSAparams.Q = Q;
-                            RSAparams.DP = DP;
-                            RSAparams.DQ = DQ;
-                            RSAparams.InverseQ = IQ;
+                            RSAParameters RSAparams = new RSAParameters
+                            {
+                                Modulus = MODULUS,
+                                Exponent = E,
+                                D = D,
+                                P = P,
+                                Q = Q,
+                                DP = DP,
+                                DQ = DQ,
+                                InverseQ = IQ
+                            };
 
                             return RSAparams;
                         }
@@ -216,7 +217,7 @@ namespace HybridEncryptionLogin.Services.Concretes
                         finally { binr.Close(); }
                     }
                 }
-                
+
             }
             else
             {

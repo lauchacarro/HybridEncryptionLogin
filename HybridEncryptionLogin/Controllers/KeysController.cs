@@ -23,7 +23,7 @@ namespace HybridEncryptionLogin.Controllers
         [HttpGet("[action]")]
         public async Task<IActionResult> GetPublicKey(string email)
         {
-            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+            using (RSA rsa = RSA.Create())
             {
                 if (_cache.TryGetValue(email, out _))
                 {
@@ -34,7 +34,7 @@ namespace HybridEncryptionLogin.Controllers
 
                 string privatekey = _rsaService.GetPrivatePEM(rsa);
 
-                _cache.Set(email, privatekey, new TimeSpan(1, 0, 0));
+                _cache.Set(email, privatekey, new TimeSpan(0, 5, 0));
 
                 return Ok(new { Key = publickey });
             }

@@ -27,8 +27,7 @@ namespace HybridEncryptionLogin.Services.Concretes
         public string DecryptString(string cipherText, byte[] keyBytes, byte[] ivBytes)
         {
             var encrypted = Convert.FromBase64String(cipherText);
-            var decriptedFromJavascript = DecryptStringFromBytes(encrypted, keyBytes, ivBytes);
-            return decriptedFromJavascript;
+            return DecryptStringFromBytes(encrypted, keyBytes, ivBytes);
         }
 
         public string DecryptStringFromBytes(byte[] cipherText, byte[] keyBytes, byte[] iv)
