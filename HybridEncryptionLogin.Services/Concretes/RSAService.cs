@@ -16,8 +16,10 @@ namespace HybridEncryptionLogin.Services.Concretes
         {
             byte[] cipherTextData = Convert.FromBase64String(cipherText);
 
-            RSACryptoServiceProvider provider = GetRSAProviderFromPEMPrivate(pemPrivateKey);
-            return provider.Decrypt(cipherTextData, false);
+            using (RSACryptoServiceProvider provider = GetRSAProviderFromPEMPrivate(pemPrivateKey))
+            {
+                return provider.Decrypt(cipherTextData, false);
+            }  
         }
 
         public RSACryptoServiceProvider GetRSAProviderFromPEMPrivate(string pem)
@@ -28,10 +30,11 @@ namespace HybridEncryptionLogin.Services.Concretes
 
             pemstr = pemstr.Replace(PEMPRIVATEHEADER, string.Empty).Replace(PEMPRIVATEFOOTER, string.Empty);
             RSAParameters rsaParameters = GetRSAProviderFromPEM(pemstr);
-            RSACryptoServiceProvider RSA = new RSACryptoServiceProvider();
-            RSA.ImportParameters(rsaParameters);
-            return RSA;
-
+            using (RSACryptoServiceProvider RSA = new RSACryptoServiceProvider())
+            {
+                RSA.ImportParameters(rsaParameters);
+                return RSA;
+            }
         }
 
         public string GetPrivatePEM(RSACryptoServiceProvider csp)
@@ -147,67 +150,73 @@ namespace HybridEncryptionLogin.Services.Concretes
                 byte[] MODULUS, E, D, P, Q, DP, DQ, IQ;
 
                 // ---------  Set up stream to decode the asn.1 encoded RSA private key  ------
-                MemoryStream mem = new MemoryStream(buffer);
-                BinaryReader binr = new BinaryReader(mem);    //wrap Memory Stream with BinaryReader for easy reading
-                try
+                using (MemoryStream mem = new MemoryStream(buffer))
                 {
-                    ushort twobytes = binr.ReadUInt16();
-                    if (twobytes == 0x8130) //data read as little endian order (actual data order for Sequence is 30 81)
-                        binr.ReadByte();    //advance 1 byte
-                    else if (twobytes == 0x8230)
-                        binr.ReadInt16();   //advance 2 bytes
-                    else
-                        return new RSAParameters();
+                    using (BinaryReader binr = new BinaryReader(mem))
+                    {
+                        //wrap Memory Stream with BinaryReader for easy reading
+                        try
+                        {
+                            ushort twobytes = binr.ReadUInt16();
+                            if (twobytes == 0x8130) //data read as little endian order (actual data order for Sequence is 30 81)
+                                binr.ReadByte();    //advance 1 byte
+                            else if (twobytes == 0x8230)
+                                binr.ReadInt16();   //advance 2 bytes
+                            else
+                                return new RSAParameters();
 
-                    twobytes = binr.ReadUInt16();
-                    if (twobytes != 0x0102) //version number
-                        return new RSAParameters();
-                    byte bt = binr.ReadByte();
-                    if (bt != 0x00)
-                        return new RSAParameters();
+                            twobytes = binr.ReadUInt16();
+                            if (twobytes != 0x0102) //version number
+                                return new RSAParameters();
+                            byte bt = binr.ReadByte();
+                            if (bt != 0x00)
+                                return new RSAParameters();
 
-                    int elems = GetIntegerSize(binr);
-                    MODULUS = binr.ReadBytes(elems);
+                            int elems = GetIntegerSize(binr);
+                            MODULUS = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    E = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            E = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    D = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            D = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    P = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            P = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    Q = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            Q = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    DP = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            DP = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    DQ = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            DQ = binr.ReadBytes(elems);
 
-                    elems = GetIntegerSize(binr);
-                    IQ = binr.ReadBytes(elems);
+                            elems = GetIntegerSize(binr);
+                            IQ = binr.ReadBytes(elems);
 
 
-                    RSAParameters RSAparams = new RSAParameters();
-                    RSAparams.Modulus = MODULUS;
-                    RSAparams.Exponent = E;
-                    RSAparams.D = D;
-                    RSAparams.P = P;
-                    RSAparams.Q = Q;
-                    RSAparams.DP = DP;
-                    RSAparams.DQ = DQ;
-                    RSAparams.InverseQ = IQ;
+                            RSAParameters RSAparams = new RSAParameters();
+                            RSAparams.Modulus = MODULUS;
+                            RSAparams.Exponent = E;
+                            RSAparams.D = D;
+                            RSAparams.P = P;
+                            RSAparams.Q = Q;
+                            RSAparams.DP = DP;
+                            RSAparams.DQ = DQ;
+                            RSAparams.InverseQ = IQ;
 
-                    return RSAparams;
+                            return RSAparams;
+                        }
+                        catch (Exception)
+                        {
+                            return new RSAParameters();
+                        }
+                        finally { binr.Close(); }
+                    }
                 }
-                catch (Exception)
-                {
-                    return new RSAParameters();
-                }
-                finally { binr.Close(); }
+                
             }
             else
             {
